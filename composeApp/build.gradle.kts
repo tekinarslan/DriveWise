@@ -32,6 +32,7 @@ kotlin {
 
             // ✅ SQLDelight Android driver
             implementation(libs.sqldelight.android.driver)
+            implementation(libs.google.play.services.location)
         }
 
         commonMain.dependencies {
@@ -49,6 +50,7 @@ kotlin {
             // ✅ Voyager
             implementation(libs.voyager.navigator)
             implementation(libs.voyager.screenmodel)
+            implementation(libs.voyager.koin)
 
             // ✅ SQLDelight runtime
             implementation(libs.sqldelight.runtime)

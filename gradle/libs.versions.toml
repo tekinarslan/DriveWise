@@ -19,6 +19,7 @@ junit = "4.13.2"
 voyager = "1.1.0-beta03"
 sqldelight = "2.2.1"
 koin = "4.1.1"
+playServicesLocation = "21.3.0"
 
 [libraries]
 # --- Test ---
@@ -39,6 +40,7 @@ androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle
 # --- Voyager (Navigation) ---
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 voyager-screenmodel = { module = "cafe.adriel.voyager:voyager-screenmodel", version.ref = "voyager" }
+voyager-koin = { module = "cafe.adriel.voyager:voyager-koin", version.ref = "voyager" }
 
 # --- SQLDelight ---
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
@@ -48,6 +50,8 @@ sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", versi
 # --- Koin (Compose Multiplatform) ---
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
+
+google-play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
