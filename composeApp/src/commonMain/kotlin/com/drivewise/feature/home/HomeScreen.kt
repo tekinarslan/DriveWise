@@ -2,8 +2,10 @@ package com.drivewise.feature.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.Lock
@@ -14,14 +16,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import com.drivewise.design.theme.DriveWiseGreen
+import com.drivewise.permission.areNotificationsEnabled
+import com.drivewise.permission.isNotificationPermissionRequired
+import com.drivewise.permission.rememberNotificationPermissionRequester
 
 class HomeScreen : Screen {
 
@@ -30,17 +35,39 @@ class HomeScreen : Screen {
         val model: HomeScreenModel = koinScreenModel()
 
         val driveSessionState by model.state.collectAsState()
+        val debugSimulate by model.debugSimulateFlow.collectAsState() // ✅ FIX
+
+        val notifRequester = rememberNotificationPermissionRequester { _ ->
+            // MVP: result sonrası ek işlem yok. Banner zaten koşula göre görünür.
+        }
+
+        var showNotifBanner by remember { mutableStateOf(false) }
+
+        // İlk girişte check
+        LaunchedEffect(Unit) {
+            showNotifBanner = isNotificationPermissionRequired() && !areNotificationsEnabled()
+        }
+
+        // İstersen her Start/Stop sonrası tekrar check (settings’ten dönünce de tetiklenebilir)
+        LaunchedEffect(driveSessionState.isRunning) {
+            showNotifBanner = isNotificationPermissionRequired() && !areNotificationsEnabled()
+        }
+
+        val scrollState = rememberScrollState()
+        val isRunning = driveSessionState.isRunning
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF4F5F7))
+                .verticalScroll(scrollState) // ✅ scroll
                 .padding(horizontal = 18.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             Spacer(Modifier.height(24.dp))
 
+            // Top title
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -54,6 +81,41 @@ class HomeScreen : Screen {
                     color = Color(0xFF111827)
                 )
                 Spacer(Modifier.weight(1f))
+            }
+
+            // Notification banner
+            if (showNotifBanner) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBEB))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Enable notifications for background tracking",
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF111827)
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                "So DriveWise can keep tracking reliably and show the live session status.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF6B7280)
+                            )
+                        }
+                        TextButton(onClick = { notifRequester.openSettings() }) {
+                            Text("Open Settings")
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
             }
 
             // Debug simulation card
@@ -70,16 +132,15 @@ class HomeScreen : Screen {
                         Text("Debug: Route Simulation", fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(2.dp))
                         Text(
-                            if (model.debugSimulate) "Fake GPS aktif (Berlin test rotası)"
+                            if (debugSimulate) "Fake GPS aktif (Berlin test rotası)"
                             else "Gerçek GPS aktif",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF6B7280)
                         )
                     }
                     Switch(
-                        checked = model.debugSimulate,
+                        checked = debugSimulate,
                         onCheckedChange = { enabled ->
-                            // running iken toggle ederse, controller zaten stop edip tracker değiştiriyor
                             model.toggleSimulation(enabled)
                         }
                     )
@@ -90,7 +151,7 @@ class HomeScreen : Screen {
 
             Text(
                 text = "Sürüşe Hazır Mısın?",
-                style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.ExtraBold),
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
                 color = Color(0xFF111827)
             )
 
@@ -118,9 +179,18 @@ class HomeScreen : Screen {
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Timer, null, tint = Color(0xFF6B7280), modifier = Modifier.size(18.dp))
+                            Icon(
+                                Icons.Filled.Timer,
+                                contentDescription = null,
+                                tint = Color(0xFF6B7280),
+                                modifier = Modifier.size(18.dp)
+                            )
                             Spacer(Modifier.width(8.dp))
-                            Text("SÜRE", style = MaterialTheme.typography.labelMedium, color = Color(0xFF6B7280))
+                            Text(
+                                "SÜRE",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color(0xFF6B7280)
+                            )
                         }
 
                         Spacer(Modifier.height(8.dp))
@@ -139,7 +209,12 @@ class HomeScreen : Screen {
                             .background(Color(0xFFF3F4F6)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Filled.Timer, null, tint = Color(0xFF9CA3AF), modifier = Modifier.size(20.dp))
+                        Icon(
+                            Icons.Filled.Timer,
+                            contentDescription = null,
+                            tint = Color(0xFF9CA3AF),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }
@@ -148,6 +223,7 @@ class HomeScreen : Screen {
 
             // Small cards
             Row(Modifier.fillMaxWidth()) {
+
                 StatCard(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Filled.Timer,
@@ -158,14 +234,26 @@ class HomeScreen : Screen {
 
                 Spacer(Modifier.width(12.dp))
 
+                val gpsLabel = when {
+                    debugSimulate -> "Simülasyon"
+                    driveSessionState.gpsReady -> "Gercek Sürüş"
+                    else -> "Zayıf"
+                }
+
+                val gpsColor = when {
+                    debugSimulate -> Color(0xFFF59E0B)
+                    driveSessionState.gpsReady -> DriveWiseGreen
+                    else -> Color(0xFFF59E0B)
+                }
+
                 StatCard(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Filled.GpsFixed,
                     label = "GPS SİNYALİ",
-                    value = if (driveSessionState.gpsReady) "Hazır" else "Debug Modu",
-                    valueColor = if (driveSessionState.gpsReady) DriveWiseGreen else Color(0xFFF59E0B),
+                    value = gpsLabel,
+                    valueColor = gpsColor,
                     showDot = true,
-                    dotColor = if (driveSessionState.gpsReady) DriveWiseGreen else Color(0xFFF59E0B)
+                    dotColor = gpsColor
                 )
             }
 
@@ -173,33 +261,31 @@ class HomeScreen : Screen {
             Text("${driveSessionState.currentSpeedKmh.toInt()} km/h")
             Spacer(Modifier.height(10.dp))
 
-            // Start button
-            val glow = Brush.radialGradient(
-                colors = listOf(DriveWiseGreen.copy(alpha = 0.35f), Color.Transparent)
-            )
-
-            Box(
+            // START BUTTON
+            FloatingActionButton(
+                onClick = {
+                    if (!isRunning) {
+                        model.start()
+                    }
+                },
+                containerColor = if (!isRunning) DriveWiseGreen else Color(0xFFE5E7EB),
+                contentColor = if (!isRunning) Color.Black else Color(0xFF9CA3AF),
+                shape = CircleShape,
                 modifier = Modifier
-                    .size(140.dp)
-                    .background(glow, CircleShape),
-                contentAlignment = Alignment.Center
+                    .size(88.dp)
+                    .alpha(if (!isRunning) 1f else 0.6f)
             ) {
-                FloatingActionButton(
-                    onClick = { model.start() },
-                    containerColor = DriveWiseGreen,
-                    shape = CircleShape,
-                    modifier = Modifier.size(88.dp)
-                ) {
-                    Icon(Icons.Filled.PlayArrow, "Start", tint = Color(0xFF0B1220), modifier = Modifier.size(34.dp))
-                }
+                Icon(
+                    imageVector = Icons.Filled.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(34.dp)
+                )
             }
-
-            Spacer(Modifier.height(10.dp))
-
+            Spacer(Modifier.height(8.dp))
             Text(
-                text = "Dersi Başlat",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = Color(0xFF111827)
+                "Dersi Başlat",
+                color = if (!isRunning) Color(0xFF111827) else Color(0xFF9CA3AF),
+                fontWeight = FontWeight.Bold
             )
 
             Spacer(Modifier.height(14.dp))
@@ -207,35 +293,50 @@ class HomeScreen : Screen {
             // Stop button
             Button(
                 onClick = { model.stop() },
-                enabled = driveSessionState.isRunning,
-                modifier = Modifier.fillMaxWidth().height(54.dp),
+                enabled = isRunning,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE5E7EB),
+                    containerColor = if (isRunning) DriveWiseGreen else Color(0xFFE5E7EB),
                     disabledContainerColor = Color(0xFFE5E7EB),
-                    contentColor = Color(0xFF111827),
+                    contentColor = Color.Black,
                     disabledContentColor = Color(0xFF9CA3AF)
                 )
             ) {
                 Icon(Icons.Filled.Square, null)
                 Spacer(Modifier.width(8.dp))
-                Text("Dersi Bitir", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text("Dersi Bitir", fontWeight = FontWeight.SemiBold)
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(18.dp))
 
             // Privacy notice
             Card(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 14.dp),
                 shape = RoundedCornerShape(22.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFEFFAF2))
             ) {
-                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
                     Box(
-                        modifier = Modifier.size(36.dp).clip(CircleShape).background(Color(0xFFE7F8ED)),
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE7F8ED)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Filled.Lock, null, tint = DriveWiseGreen, modifier = Modifier.size(18.dp))
+                        Icon(
+                            Icons.Filled.Lock,
+                            contentDescription = null,
+                            tint = DriveWiseGreen,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
 
                     Spacer(Modifier.width(12.dp))
@@ -255,6 +356,9 @@ class HomeScreen : Screen {
                     }
                 }
             }
+
+            // bottom padding so last card isn't glued
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -269,10 +373,14 @@ private fun StatCard(
     showDot: Boolean = false,
     dotColor: Color = DriveWiseGreen
 ) {
-    Card(modifier = modifier, shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, null, tint = Color(0xFF6B7280), modifier = Modifier.size(18.dp))
+                Icon(icon, contentDescription = null, tint = Color(0xFF6B7280), modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(label, style = MaterialTheme.typography.labelMedium, color = Color(0xFF6B7280))
             }
@@ -281,7 +389,12 @@ private fun StatCard(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (showDot) {
-                    Box(Modifier.size(10.dp).clip(CircleShape).background(dotColor))
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(dotColor)
+                    )
                     Spacer(Modifier.width(8.dp))
                 }
 

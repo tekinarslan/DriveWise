@@ -195,7 +195,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "DriveWise uses your location during driving lessons to record routes and provide exam-focused feedback.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Needed to track driving sessions in the background.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We record your route during lessons to generate your driving report.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -224,7 +225,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "DriveWise uses your location during driving lessons to record routes and provide exam-focused feedback.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Needed to track driving sessions in the background.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We record your route during lessons to generate your driving report.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

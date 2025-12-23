@@ -9,12 +9,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +23,9 @@ import com.drivewise.design.theme.DriveWiseGreen
 import com.drivewise.feature.home.HomeScreen
 import com.drivewise.permission.LocationPermissionStatus
 import com.drivewise.permission.rememberLocationPermissionRequester
+import com.drivewise.permission.NotificationPermissionStatus
+import com.drivewise.permission.isNotificationPermissionRequired
+import com.drivewise.permission.rememberNotificationPermissionRequester
 import kotlinx.coroutines.launch
 
 class LocationPermissionScreen : Screen {
@@ -40,10 +38,28 @@ class LocationPermissionScreen : Screen {
 
         val nav = LocalNavigator.current!!
 
-        val requester = rememberLocationPermissionRequester { status ->
+        // ✅ notification requester (location granted sonrası çağıracağız)
+        val notifRequester = rememberNotificationPermissionRequester { _ ->
+            // MVP: sonuç ne olursa olsun Home'a geç
+            nav.replace(HomeScreen())
+        }
+
+        var notifRequestTriggered by remember { mutableStateOf(false) }
+
+        fun goNext() {
+            // Android <13 vs iOS vs Android 13+ kontrolü
+            if (isNotificationPermissionRequired() && !notifRequestTriggered) {
+                notifRequestTriggered = true
+                notifRequester.request()
+            } else {
+                nav.replace(HomeScreen())
+            }
+        }
+
+        val locationRequester = rememberLocationPermissionRequester { status ->
             when (status) {
                 LocationPermissionStatus.GRANTED -> {
-                    nav.replace(HomeScreen())
+                    goNext()
                 }
 
                 LocationPermissionStatus.DENIED -> {
@@ -123,7 +139,7 @@ class LocationPermissionScreen : Screen {
 
                 Spacer(Modifier.height(12.dp))
 
-                // Badge
+                // Badge (iki izin vurgusu yapalım)
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
@@ -131,7 +147,7 @@ class LocationPermissionScreen : Screen {
                         .padding(horizontal = 14.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        text = "KONUM ERİŞİMİ GEREKLİ",
+                        text = "KONUM + BİLDİRİM İZNİ",
                         style = MaterialTheme.typography.labelMedium,
                         color = DriveWiseGreen
                     )
@@ -140,17 +156,15 @@ class LocationPermissionScreen : Screen {
                 Spacer(Modifier.height(20.dp))
 
                 Text(
-                    text = "Doğru geri bildirim için GPS’i\netkinleştirin",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
+                    text = "Arka planda kayıt için\nizinleri etkinleştirin",
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                     color = Color(0xFF121826)
                 )
 
                 Spacer(Modifier.height(12.dp))
 
                 Text(
-                    text = "Sürüş hatalarınızı analiz etmek ve sınav rotanızın bir haritasını oluşturmak için sürüş dersleriniz sırasında konumunuzu kaydetmemiz gerekiyor.",
+                    text = "Sürüş dersiniz sırasında konumu kaydederiz. Dersi arka planda takip edebilmek ve durum bilgisini gösterebilmek için bildirim izni de isteyebiliriz.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color(0xFF6B7280)
                 )
@@ -163,63 +177,84 @@ class LocationPermissionScreen : Screen {
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB))
                 ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFEFFAF2)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Check,
-                                contentDescription = null,
-                                tint = DriveWiseGreen
-                            )
+                    Column(modifier = Modifier.padding(16.dp)) {
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFEFFAF2)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = null,
+                                    tint = DriveWiseGreen
+                                )
+                            }
+                            Spacer(Modifier.width(14.dp))
+                            Column {
+                                Text(
+                                    text = "Konum (GPS)",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "Rotayı ve hız profilini çıkarırız.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color(0xFF6B7280)
+                                )
+                            }
                         }
 
-                        Spacer(Modifier.width(14.dp))
+                        Spacer(Modifier.height(12.dp))
 
-                        Column {
-                            Text(
-                                text = "Otomatik Rota Analizi",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.SemiBold
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFEFFAF2)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = null,
+                                    tint = DriveWiseGreen
                                 )
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = "Harita üzerinde zorlu kavşakları ve hataları doğrudan işaretleriz.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF6B7280)
-                            )
+                            }
+                            Spacer(Modifier.width(14.dp))
+                            Column {
+                                Text(
+                                    text = "Bildirim (Notification)",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "Arka planda çalıştığını gösterir ve dersi durdurmanı sağlar.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color(0xFF6B7280)
+                                )
+                            }
                         }
                     }
                 }
 
                 Spacer(Modifier.weight(1f))
 
-                // Primary CTA
+                // Primary CTA: önce konum ister, granted olursa notification’a geçer
                 Button(
-                    onClick = {
-                        requester.request()
-                    },
+                    onClick = { locationRequester.request() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = DriveWiseGreen
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = DriveWiseGreen)
                 ) {
                     Text(
-                        "Konum Erişimi Ver  →",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        )
+                        "İzinleri Etkinleştir  →",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 }
 
@@ -240,7 +275,7 @@ class LocationPermissionScreen : Screen {
                 confirmButton = {
                     TextButton(onClick = {
                         showSettingsDialog = false
-                        requester.openSettings()
+                        locationRequester.openSettings()
                     }) { Text("Ayarlar'a Git") }
                 },
                 dismissButton = {
@@ -248,6 +283,5 @@ class LocationPermissionScreen : Screen {
                 }
             )
         }
-
     }
 }
