@@ -3,7 +3,9 @@ package com.drivewise.feature.home
 import cafe.adriel.voyager.core.model.ScreenModel
 import com.drivewise.background.BackgroundSessionRunner
 import com.drivewise.session.DriveSessionController
+import com.drivewise.session.DriveSessionEvent
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -14,6 +16,7 @@ class HomeScreenModel(
 ) : ScreenModel {
 
     val state = controller.state
+    val events: SharedFlow<DriveSessionEvent> = controller.events
 
     private val _debugSimulate = MutableStateFlow(false)
     val debugSimulateFlow: StateFlow<Boolean> = _debugSimulate.asStateFlow()
@@ -27,7 +30,7 @@ class HomeScreenModel(
     fun stop() = controller.stop()
 
     override fun onDispose() {
-        controller.stop()
+        controller.stop(navigateToReport = false)
         super.onDispose()
     }
 }

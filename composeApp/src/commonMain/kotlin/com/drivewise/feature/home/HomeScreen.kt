@@ -23,10 +23,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
 import com.drivewise.design.theme.DriveWiseGreen
+import com.drivewise.design.theme.DriveWiseGreenSoft
+import com.drivewise.feature.report.LessonHistoryScreen
+import com.drivewise.feature.report.LessonReportScreen
 import com.drivewise.permission.areNotificationsEnabled
 import com.drivewise.permission.isNotificationPermissionRequired
 import com.drivewise.permission.rememberNotificationPermissionRequester
+import com.drivewise.session.DriveSessionEvent
 
 class HomeScreen : Screen {
 
@@ -35,13 +40,25 @@ class HomeScreen : Screen {
         val model: HomeScreenModel = koinScreenModel()
 
         val driveSessionState by model.state.collectAsState()
-        val debugSimulate by model.debugSimulateFlow.collectAsState() // ✅ FIX
+        val debugSimulate by model.debugSimulateFlow.collectAsState()
 
         val notifRequester = rememberNotificationPermissionRequester { _ ->
             // MVP: result sonrası ek işlem yok. Banner zaten koşula göre görünür.
         }
 
         var showNotifBanner by remember { mutableStateOf(false) }
+
+        val nav = LocalNavigator.current!!
+
+        LaunchedEffect(Unit) {
+            model.events.collect { e ->
+                when (e) {
+                    is DriveSessionEvent.Finished -> {
+                        nav.push(LessonReportScreen(e.lessonId))
+                    }
+                }
+            }
+        }
 
         // İlk girişte check
         LaunchedEffect(Unit) {
@@ -312,6 +329,15 @@ class HomeScreen : Screen {
 
             Spacer(Modifier.height(18.dp))
 
+            Button(
+                onClick = { nav.push(LessonHistoryScreen()) },
+                modifier = Modifier.height(54.dp).fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = DriveWiseGreenSoft)
+            ) {
+                Text("Lesson History", fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(18.dp))
             // Privacy notice
             Card(
                 modifier = Modifier

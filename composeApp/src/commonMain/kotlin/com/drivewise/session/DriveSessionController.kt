@@ -4,12 +4,18 @@ import com.drivewise.background.BackgroundSessionRunner
 import com.drivewise.data.TrackPointRepository
 import com.drivewise.tracking.AdaptiveSampler
 import com.drivewise.tracking.RawGpsSample
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlin.math.*
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+
+sealed class DriveSessionEvent {
+    data class Finished(val lessonId: String) : DriveSessionEvent()
+}
 
 @OptIn(ExperimentalTime::class)
 class DriveSessionController(
@@ -19,6 +25,9 @@ class DriveSessionController(
 ) {
     private val _state = MutableStateFlow(DriveSessionState())
     val state: StateFlow<DriveSessionState> = _state
+
+    private val _events = MutableSharedFlow<DriveSessionEvent>(extraBufferCapacity = 1)
+    val events: SharedFlow<DriveSessionEvent> = _events
 
     // running aggregates
     private var sumSpeed = 0.0
@@ -49,11 +58,16 @@ class DriveSessionController(
         }
     }
 
-    fun stop() {
-        if (!_state.value.isRunning) return
-        bgRunner.stop()
+    fun stop(navigateToReport: Boolean = true) {
+        val lessonId = _state.value.lessonId
+        if (!_state.value.isRunning || lessonId.isNullOrBlank()) return
 
+        bgRunner.stop()
         _state.update { it.copy(isRunning = false) }
+
+        if (navigateToReport) {
+            _events.tryEmit(DriveSessionEvent.Finished(lessonId))
+        }
     }
 
     fun isRunning(): Boolean = _state.value.isRunning

@@ -3,6 +3,9 @@ package com.drivewise.di
 import com.drivewise.core.OnboardingStore
 import com.drivewise.data.TrackPointRepository
 import com.drivewise.feature.home.HomeScreenModel
+import com.drivewise.feature.report.LessonHistoryModel
+import com.drivewise.feature.report.LessonReportScreenModel
+import com.drivewise.repository.LessonReportRepository
 import com.drivewise.session.DriveSessionController
 import com.drivewise.tracking.AdaptiveSampler
 import org.koin.core.qualifier.named
@@ -30,6 +33,21 @@ val commonModule = module {
             controller = get(),
             realRunner = get(named("real")),
             fakeRunner = get(named("fake"))
+        )
+    }
+
+    single { LessonReportRepository(get()) }
+
+    factory { (lessonId: String) ->
+        LessonReportScreenModel(
+            lessonId = lessonId,
+            repo = get()
+        )
+    }
+    factory {
+        LessonHistoryModel(
+            repo = get(),
+            onboardingStore = get()
         )
     }
 }

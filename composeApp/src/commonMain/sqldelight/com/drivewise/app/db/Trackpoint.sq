@@ -21,14 +21,54 @@ SELECT * FROM TrackPoint
 WHERE lesson_id = ?
 ORDER BY timestamp_ms ASC;
 
-deleteLessonPoints:
-DELETE FROM TrackPoint WHERE lesson_id = ?;
-
-countByLesson:
-SELECT COUNT(*) FROM TrackPoint WHERE lesson_id = ?;
-
 lastPointByLesson:
 SELECT * FROM TrackPoint
 WHERE lesson_id = ?
 ORDER BY timestamp_ms DESC
 LIMIT 1;
+
+deleteLessonPoints:
+DELETE FROM TrackPoint
+WHERE lesson_id = ?;
+
+countByLesson:
+SELECT COUNT(*) FROM TrackPoint
+WHERE lesson_id = ?;
+
+-- Tek ders için aggregate (Report ekranı için)
+lessonAgg:
+SELECT
+  lesson_id            AS lessonId,
+  COUNT(*)             AS pointsSaved,
+  MIN(timestamp_ms)    AS startedAtMs,
+  MAX(timestamp_ms)    AS endedAtMs,
+  AVG(speed_kmh)       AS avgSpeedKmh,
+  MAX(speed_kmh)       AS maxSpeedKmh
+FROM TrackPoint
+WHERE lesson_id = ?
+GROUP BY lesson_id;
+
+-- Lesson history list (tüm dersler)
+lessonSummaries:
+SELECT
+  lesson_id            AS lessonId,
+  COUNT(*)             AS pointsSaved,
+  MIN(timestamp_ms)    AS startedAtMs,
+  MAX(timestamp_ms)    AS endedAtMs,
+  AVG(speed_kmh)       AS avgSpeedKmh,
+  MAX(speed_kmh)       AS maxSpeedKmh
+FROM TrackPoint
+GROUP BY lesson_id
+ORDER BY startedAtMs DESC;
+
+lessonSummaryById:
+SELECT
+  lesson_id            AS lessonId,
+  COUNT(*)             AS pointsSaved,
+  MIN(timestamp_ms)    AS startedAtMs,
+  MAX(timestamp_ms)    AS endedAtMs,
+  AVG(speed_kmh)       AS avgSpeedKmh,
+  MAX(speed_kmh)       AS maxSpeedKmh
+FROM TrackPoint
+WHERE lesson_id = ?
+GROUP BY lesson_id;
