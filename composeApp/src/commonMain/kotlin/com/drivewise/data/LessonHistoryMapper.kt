@@ -8,7 +8,8 @@ import kotlin.math.roundToInt
 object LessonHistoryMapper {
     fun map(
         lessonSummary: LessonSummary,
-        languageCode: String
+        languageCode: String,
+        totalKm : Double
     ): LessonHistoryUiItem {
         val durationSec =
             ((lessonSummary.endedAtMs - lessonSummary.startedAtMs) / 1000L).toInt().coerceAtLeast(0)
@@ -22,7 +23,8 @@ object LessonHistoryMapper {
             durationSec = durationSec,
             pointsSaved = lessonSummary.pointsSaved.toInt(),
             avgSpeedKmh = lessonSummary.avgSpeedKmh.roundToInt(),
-            maxSpeedKmh = lessonSummary.maxSpeedKmh.roundToInt()
+            maxSpeedKmh = lessonSummary.maxSpeedKmh.roundToInt(),
+            totalKm = totalKm
         )
     }
 }

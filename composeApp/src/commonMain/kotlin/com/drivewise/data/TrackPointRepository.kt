@@ -2,6 +2,7 @@ package com.drivewise.data
 
 import com.drivewise.tracking.RawGpsSample
 import com.drivewise.app.db.AppDatabase
+import com.drivewise.app.db.TrackPoint
 import com.drivewise.feature.report.LessonSummary
 
 class TrackPointRepository(
@@ -50,5 +51,11 @@ class TrackPointRepository(
 
     fun deleteLesson(lessonId: String) {
         db.trackpointQueries.deleteLessonPoints(lessonId)
+    }
+
+    fun pointsByLesson(lessonId: String): List<TrackPoint> {
+        return db.trackpointQueries
+            .pointsByLesson(lesson_id = lessonId)
+            .executeAsList()
     }
 }

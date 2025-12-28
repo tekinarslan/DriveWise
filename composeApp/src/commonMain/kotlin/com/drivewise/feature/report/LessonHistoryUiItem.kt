@@ -5,7 +5,7 @@ data class LessonHistoryUiItem(
     val title: String,
     val durationSec: Int,
     val pointsSaved: Int,
-    val totalKm: Double,
+    val totalKm: Double = 0.0,
     val avgSpeedKmh: Int,
     val maxSpeedKmh: Int
 )
