@@ -17,6 +17,7 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import com.drivewise.design.theme.DriveWiseGreen
 import com.drivewise.design.theme.DriveWiseGreenSoft
+import com.drivewise.map.RouteMap
 import org.koin.core.parameter.parametersOf
 
 class LessonReportScreen(
@@ -27,7 +28,9 @@ class LessonReportScreen(
     override fun Content() {
         val nav = LocalNavigator.current!!
         val model: LessonReportScreenModel = koinScreenModel(parameters = { parametersOf(lessonId) })
+
         val st by model.state.collectAsState()
+        val route by model.route.collectAsState()
 
         val scroll = rememberScrollState()
 
@@ -55,9 +58,10 @@ class LessonReportScreen(
 
             when {
                 st.loading -> {
-                    Box(Modifier.fillMaxWidth().padding(top = 40.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                    Box(
+                        Modifier.fillMaxWidth().padding(top = 40.dp),
+                        contentAlignment = Alignment.Center
+                    ) { CircularProgressIndicator() }
                 }
 
                 st.error != null -> {
@@ -70,12 +74,13 @@ class LessonReportScreen(
                             Text("Hata", fontWeight = FontWeight.Bold, color = Color(0xFF111827))
                             Spacer(Modifier.height(6.dp))
                             Text(st.error!!, color = Color(0xFF6B7280))
+                            Spacer(Modifier.height(12.dp))
+                            Button(onClick = { model.refreshAll() }) { Text("Retry") }
                         }
                     }
                 }
 
                 else -> {
-                    // Summary cards
                     SummaryRow(
                         durationSec = st.durationSec,
                         km = st.totalKm,
@@ -101,24 +106,68 @@ class LessonReportScreen(
 
                     Spacer(Modifier.height(18.dp))
 
+                    // ---- ROUTE SECTION (MVP) ----
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(Modifier.padding(16.dp)) {
+                            Text("Route (snapped)", fontWeight = FontWeight.SemiBold, color = Color(0xFF111827))
+                            Spacer(Modifier.height(10.dp))
+
+                            when {
+                                route.loading -> {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                        Spacer(Modifier.width(10.dp))
+                                        Text("Matching…", color = Color(0xFF6B7280))
+                                    }
+                                }
+
+                                route.error != null -> {
+                                    Text("Matching failed: ${route.error}", color = Color(0xFFB91C1C))
+                                    Spacer(Modifier.height(10.dp))
+                                    Button(onClick = { model.buildMatchedRoute(force = true) }) {
+                                        Text("Retry Matching")
+                                    }
+                                }
+
+                                route.polyline.isEmpty() -> {
+                                    Text("No route points.", color = Color(0xFF6B7280))
+                                }
+
+                                else -> {
+                                    // Şimdilik: iOS placeholder bile olsa RouteMap expect/actual ile çözüyoruz.
+                                    RouteMap(
+                                        points = route.polyline,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(220.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(18.dp))
+
                     Row {
                         Button(
                             onClick = { nav.pop() },
                             modifier = Modifier.height(54.dp).weight(1f),
                             shape = RoundedCornerShape(28.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = DriveWiseGreen)
-                        ) {
-                            Text("Back to Home", fontWeight = FontWeight.Bold)
-                        }
+                        ) { Text("Back", fontWeight = FontWeight.Bold) }
+
+                        Spacer(Modifier.width(10.dp))
 
                         Button(
                             onClick = { nav.push(LessonHistoryScreen()) },
                             modifier = Modifier.height(54.dp).weight(1f),
                             shape = RoundedCornerShape(28.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = DriveWiseGreenSoft)
-                        ) {
-                            Text("Lesson History", fontWeight = FontWeight.Bold)
-                        }
+                        ) { Text("History", fontWeight = FontWeight.Bold) }
                     }
                 }
             }
@@ -133,7 +182,7 @@ private fun SummaryRow(durationSec: Int, km: Double, avgSpeed: Double, maxSpeed:
     Row(Modifier.fillMaxWidth()) {
         SummaryCard("SÜRE", formatHms(durationSec), Modifier.weight(1f))
         Spacer(Modifier.width(10.dp))
-        SummaryCard("KM", formatKm(km), Modifier.weight(1f))
+        SummaryCard("Toplam KM", formatKm(km), Modifier.weight(1f))
     }
     Spacer(Modifier.height(10.dp))
     Row(Modifier.fillMaxWidth()) {

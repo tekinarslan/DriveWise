@@ -41,7 +41,9 @@ val commonModule = module {
     factory { (lessonId: String) ->
         LessonReportScreenModel(
             lessonId = lessonId,
-            repo = get()
+            repo = get(),          // LessonReportRepository
+            trackRepo = get(),     // TrackPointRepository
+            ors = get()            // OrsSnapClient
         )
     }
     factory {

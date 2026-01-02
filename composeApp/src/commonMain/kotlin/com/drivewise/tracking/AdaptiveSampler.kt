@@ -13,7 +13,7 @@ data class RawGpsSample(
 class AdaptiveSampler(
     private val baseIntervalMs: Long = 5_000L,
     private val slowIntervalMs: Long = 3_000L,
-    private val minMovingSpeedMps: Double = 0.5,          // ~1.8 km/h
+    private val minMovingSpeedKmh: Double = 1.8,          // ~1.8 km/h
     private val speedDeltaTriggerKmh: Double = 8.0,       // ani hız değişimi
     private val bearingDeltaTriggerDeg: Double = 28.0     // ani yön değişimi
 ) {
@@ -25,7 +25,7 @@ class AdaptiveSampler(
      */
     fun shouldRecord(sample: RawGpsSample): Boolean {
         // 1) hiç hareket yoksa kaydetme
-        if (sample.speedKmh < minMovingSpeedMps) return false
+        if (sample.speedKmh < minMovingSpeedKmh) return false
 
         val prev = lastSaved
         if (prev == null) {

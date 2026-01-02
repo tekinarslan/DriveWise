@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.sqldelight)
+    kotlin("plugin.serialization") version "2.3.0"
 }
 
 kotlin {
@@ -33,6 +34,13 @@ kotlin {
             // ✅ SQLDelight Android driver
             implementation(libs.sqldelight.android.driver)
             implementation(libs.google.play.services.location)
+
+            implementation(libs.ktor.client.okhttp)
+
+            implementation("com.google.android.gms:play-services-maps:19.2.0")
+            implementation("com.google.maps.android:maps-compose:7.0.0")
+
+            implementation("io.github.aakira:napier:2.7.1")
         }
 
         commonMain.dependencies {
@@ -60,13 +68,21 @@ kotlin {
             // ✅ Koin (CMP)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
+
+            implementation(libs.ktor.client.logging)
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+
+            implementation(libs.kotlinx.serialization.json)
+            implementation("io.github.aakira:napier:2.7.1")
         }
 
-        // iOS source set'i explicit tanımlı değil; KMP template genelde iosMain'i otomatik yaratır.
-        // Buraya eklemek daha net olsun diye iosMain dependencies ekleyelim:
         iosMain.dependencies {
             // ✅ SQLDelight iOS driver
             implementation(libs.sqldelight.native.driver)
+            implementation(libs.ktor.client.darwin)
+            implementation("io.github.aakira:napier:2.7.1")
         }
 
         commonTest.dependencies {

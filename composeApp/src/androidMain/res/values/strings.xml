@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">DriveWise</string>
+    <string name="google_maps_key">AIzaSyANwoPIkdtRGU7JUQeG8wFvpQvgjqhczzs</string>
 </resources>

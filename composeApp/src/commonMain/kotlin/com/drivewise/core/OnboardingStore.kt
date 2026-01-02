@@ -1,30 +1,32 @@
 package com.drivewise.core
 
 import com.drivewise.app.db.AppDatabase
+import io.github.aakira.napier.Napier
+
+private const val KEY_LANG = "lang"
+private const val KEY_DONE = "onboarding_done"
 
 class OnboardingStore(private val db: AppDatabase) {
-    private val q = db.keyValueQueries
-
-    private val KEY_LANG = "lang"
-    private val KEY_DONE = "onboarding_done"
+    private val keyValueQueries = db.keyValueQueries
 
     fun getLanguage(): Language {
-        val code = q.selectByKey(KEY_LANG).executeAsOneOrNull()
+        Napier.i("OnboardingStore getLanguage")
+        val code = keyValueQueries.selectByKey(KEY_LANG).executeAsOneOrNull()
             ?: Language.DE.code
         return Language.entries.firstOrNull { it.code == code } ?: Language.DE
     }
 
     fun setLanguage(lang: Language) {
-        q.insert(KEY_LANG, lang.code)
-        q.update(lang.code, KEY_LANG)
+        keyValueQueries.insert(KEY_LANG, lang.code)
+        keyValueQueries.update(lang.code, KEY_LANG)
     }
 
     fun isDone(): Boolean =
-        (q.selectByKey(KEY_DONE).executeAsOneOrNull() ?: "false").toBoolean()
+        (keyValueQueries.selectByKey(KEY_DONE).executeAsOneOrNull() ?: "false").toBoolean()
 
     fun setDone(done: Boolean) {
         val value = done.toString()
-        q.insert(KEY_DONE, value)
-        q.update(value, KEY_DONE)
+        keyValueQueries.insert(KEY_DONE, value)
+        keyValueQueries.update(value, KEY_DONE)
     }
 }

@@ -17,7 +17,7 @@ fun platformModule() = module {
 
     single<BackgroundSessionRunner>(named("fake")) {
         FakeBackgroundSessionRunner(
-            route = DebugRoutes.berlinShort,
+            route = DebugRoutes.berlinCharlottenburg10k,
             intervalMs = 1000L
         )
     }

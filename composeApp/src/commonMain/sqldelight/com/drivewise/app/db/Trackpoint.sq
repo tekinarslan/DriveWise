@@ -2,8 +2,8 @@ CREATE TABLE TrackPoint (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   lesson_id TEXT NOT NULL,
 
-  lat REAL NOT NULL,
   lon REAL NOT NULL,
+  lat REAL NOT NULL,
 
   speed_kmh REAL NOT NULL,
   bearing_deg REAL,         -- nullable
@@ -13,7 +13,7 @@ CREATE TABLE TrackPoint (
 
 createPoint:
 INSERT INTO TrackPoint(
-  lesson_id, lat, lon, speed_kmh, bearing_deg, timestamp_ms
+  lesson_id, lon, lat, speed_kmh, bearing_deg, timestamp_ms
 ) VALUES (?, ?, ?, ?, ?, ?);
 
 pointsByLesson:

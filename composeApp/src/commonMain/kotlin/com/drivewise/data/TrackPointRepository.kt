@@ -12,8 +12,8 @@ class TrackPointRepository(
     fun insert(lessonId: String, sample: RawGpsSample) {
         db.trackpointQueries.createPoint(
             lesson_id = lessonId,
-            lat = sample.lat,
             lon = sample.lon,
+            lat = sample.lat,
             speed_kmh = sample.speedKmh,
             bearing_deg = sample.bearingDeg,
             timestamp_ms = sample.timestampMs

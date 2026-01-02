@@ -9,6 +9,7 @@ fun initKoinAndroid(context: Context) {
             platformModule(context),
             databaseModule,
             commonModule,
+            networkModule,
             permissionModule
         )
     }

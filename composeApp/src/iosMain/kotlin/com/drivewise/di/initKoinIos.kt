@@ -8,6 +8,7 @@ fun initKoinIos() {
             platformModule(),
             databaseModule,
             commonModule,
+            networkModule,
             permissionModule
         )
     }
