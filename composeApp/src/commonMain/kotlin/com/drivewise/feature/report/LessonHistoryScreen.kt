@@ -24,7 +24,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
@@ -78,9 +77,9 @@ class LessonHistoryScreen : Screen {
                         }
                     },
                     actions = {
-                        IconButton(onClick = { model.refresh() }) {
+                       /* IconButton(onClick = { model.refresh() }) {
                             Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
-                        }
+                        }*/
                     }
                 )
             }
