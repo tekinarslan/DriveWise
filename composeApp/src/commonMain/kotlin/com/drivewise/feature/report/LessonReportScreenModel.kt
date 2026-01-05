@@ -2,12 +2,14 @@ package com.drivewise.feature.report
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.drivewise.core.OnboardingStore
 import com.drivewise.data.TrackPointRepository
 import com.drivewise.matching.Downsample
 import com.drivewise.matching.LatLon
 import com.drivewise.matching.OrsSnapClient
 import com.drivewise.matching.SnapPipeline
 import com.drivewise.repository.LessonReportRepository
+import com.drivewise.util.DateTimeFormatter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -22,7 +24,8 @@ class LessonReportScreenModel(
     private val lessonId: String,
     private val repo: LessonReportRepository,
     private val trackRepo: TrackPointRepository,
-    private val ors: OrsSnapClient
+    private val ors: OrsSnapClient,
+    private val onboardingStore: OnboardingStore
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(LessonReportState(loading = true, lessonId = lessonId))
@@ -59,7 +62,10 @@ class LessonReportScreenModel(
 
                 LessonReportState(
                     loading = false,
-                    lessonId = lessonId,
+                    lessonId = DateTimeFormatter.formatLessonTitle(
+                        startedAtMs = agg.startMs ?: 0,
+                        languageCode = onboardingStore.getLanguage().code
+                    ),
                     pointsCount = agg.pointsCount.toInt(),
                     durationSec = durationSec,
                     totalKm = totalKm,
@@ -108,7 +114,8 @@ class LessonReportScreenModel(
             }.onSuccess { snapped ->
                 _route.value = RouteMatchState(loading = false, polyline = snapped)
             }.onFailure { e ->
-                _route.value = RouteMatchState(loading = false, error = e.message ?: "Matching failed")
+                _route.value =
+                    RouteMatchState(loading = false, error = e.message ?: "Matching failed")
             }
         }
     }

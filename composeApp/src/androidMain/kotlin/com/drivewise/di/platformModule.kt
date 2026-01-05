@@ -20,7 +20,7 @@ fun platformModule(context: Context) = module {
 
     single<BackgroundSessionRunner>(named("fake")) {
         FakeBackgroundSessionRunner(
-            route = DebugRoutes.berlinCharlottenburg10k,
+            route = DebugRoutes.berlinTourList,
             intervalMs = 1000L
         )
     }

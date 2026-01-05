@@ -3,10 +3,8 @@ package com.drivewise.repository
 import com.drivewise.app.db.AppDatabase
 import kotlin.math.*
 
-class LessonReportRepository(
-    private val db: AppDatabase
-) {
-    private val q = db.trackpointQueries
+class LessonReportRepository(db: AppDatabase) {
+    private val trackpointQueries = db.trackpointQueries
 
     data class Agg(
         val lessonId: String,
@@ -18,7 +16,7 @@ class LessonReportRepository(
     )
 
     fun loadAgg(lessonId: String): Agg? {
-        val row = q.lessonAgg(lesson_id = lessonId).executeAsOneOrNull() ?: return null
+        val row = trackpointQueries.lessonAgg(lesson_id = lessonId).executeAsOneOrNull() ?: return null
 
         return Agg(
             lessonId = row.lessonId,
@@ -31,7 +29,7 @@ class LessonReportRepository(
     }
 
     fun loadPoints(lessonId: String) =
-        q.pointsByLesson(lesson_id = lessonId).executeAsList()
+        trackpointQueries.pointsByLesson(lesson_id = lessonId).executeAsList()
 
     fun computeTotalKm(lessonId: String): Double {
         val pts = loadPoints(lessonId)
@@ -51,7 +49,7 @@ class LessonReportRepository(
         val dLat = (lat2 - lat1) * PI / 180.0
         val dLon = (lon2 - lon1) * PI / 180.0
         val a = sin(dLat / 2).pow(2) +
-            cos(lat1 * PI / 180.0) * cos(lat2 * PI / 180.0) * sin(dLon / 2).pow(2)
+                cos(lat1 * PI / 180.0) * cos(lat2 * PI / 180.0) * sin(dLon / 2).pow(2)
         val c = 2 * atan2(sqrt(a), sqrt(1 - a))
         return r * c
     }

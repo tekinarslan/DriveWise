@@ -43,7 +43,8 @@ val commonModule = module {
             lessonId = lessonId,
             repo = get(),          // LessonReportRepository
             trackRepo = get(),     // TrackPointRepository
-            ors = get()            // OrsSnapClient
+            ors = get(), // OrsSnapClient
+            onboardingStore = get()
         )
     }
     factory {

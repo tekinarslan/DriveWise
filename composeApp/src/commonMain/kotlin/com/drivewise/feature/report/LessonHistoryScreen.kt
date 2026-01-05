@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Route
@@ -54,7 +55,6 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import com.drivewise.design.theme.DriveWiseGreen
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 class LessonHistoryScreen : Screen {
@@ -63,12 +63,20 @@ class LessonHistoryScreen : Screen {
     override fun Content() {
         val model: LessonHistoryModel = koinScreenModel()
         val state by model.state.collectAsState()
-        val nav = LocalNavigator.current
+        val nav = LocalNavigator.current!!
 
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
                     title = { Text("Lesson History", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = { nav.pop() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    },
                     actions = {
                         IconButton(onClick = { model.refresh() }) {
                             Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
@@ -214,7 +222,7 @@ private fun LessonRow(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "View",
+                                "See Report",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = DriveWiseGreen,
                                 fontWeight = FontWeight.SemiBold
